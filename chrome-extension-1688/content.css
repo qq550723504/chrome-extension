@@ -1,0 +1,164 @@
+/* 1688选品工具 - 内容样式 */
+
+/* 收集按钮样式 */
+.collect-btn-1688 {
+    background: linear-gradient(135deg, #ff6900, #ff8533);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    margin: 10px;
+    box-shadow: 0 2px 8px rgba(255, 105, 0, 0.3);
+    transition: all 0.3s ease;
+    z-index: 9999;
+    position: relative;
+}
+
+.collect-btn-1688:hover {
+    background: linear-gradient(135deg, #e55a00, #ff7020);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(255, 105, 0, 0.4);
+}
+
+.collect-btn-1688:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 6px rgba(255, 105, 0, 0.3);
+}
+
+.collect-btn-1688:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+/* 固定位置的收集按钮 */
+#collect-1688-btn {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 10000;
+}
+
+/* 商品详情页按钮 */
+#collect-detail-btn {
+    display: inline-block;
+    margin: 10px 0;
+}
+
+/* 通知样式 */
+.notification-1688 {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 12px 20px;
+    border-radius: 6px;
+    color: white;
+    font-size: 14px;
+    font-weight: 500;
+    z-index: 10001;
+    animation: slideIn 0.3s ease-out;
+    max-width: 300px;
+    word-wrap: break-word;
+}
+
+.notification-1688.success {
+    background: linear-gradient(135deg, #00b894, #00cec9);
+    box-shadow: 0 4px 12px rgba(0, 184, 148, 0.3);
+}
+
+.notification-1688.error {
+    background: linear-gradient(135deg, #e17055, #d63031);
+    box-shadow: 0 4px 12px rgba(214, 48, 49, 0.3);
+}
+
+.notification-1688.info {
+    background: linear-gradient(135deg, #0984e3, #74b9ff);
+    box-shadow: 0 4px 12px rgba(9, 132, 227, 0.3);
+}
+
+/* 动画效果 */
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* 商品高亮效果 */
+.product-highlighted {
+    outline: 2px solid #ff6900;
+    outline-offset: 2px;
+    border-radius: 4px;
+    background: rgba(255, 105, 0, 0.05);
+    transition: all 0.3s ease;
+}
+
+/* 收集进度指示器 */
+.collect-progress {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 20px 30px;
+    border-radius: 8px;
+    z-index: 10002;
+    text-align: center;
+}
+
+.collect-progress .spinner {
+    width: 30px;
+    height: 30px;
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    border-top: 3px solid #ff6900;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 10px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    .collect-btn-1688 {
+        padding: 8px 16px;
+        font-size: 12px;
+    }
+    
+    #collect-1688-btn {
+        top: 10px;
+        right: 10px;
+    }
+    
+    .notification-1688 {
+        top: 10px;
+        right: 10px;
+        max-width: 250px;
+        font-size: 12px;
+        padding: 10px 16px;
+    }
+}
+
+/* 深色模式适配 */
+@media (prefers-color-scheme: dark) {
+    .collect-progress {
+        background: rgba(255, 255, 255, 0.9);
+        color: #333;
+    }
+    
+    .product-highlighted {
+        background: rgba(255, 105, 0, 0.1);
+    }
+}

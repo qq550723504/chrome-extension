@@ -1,0 +1,54 @@
+<svg width="128" height="128" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- 外圈边框 -->
+  <circle cx="64" cy="64" r="64" fill="#E67E22"/>
+  <circle cx="64" cy="64" r="60" fill="none" stroke="#FFFFFF" stroke-width="2.5"/>
+  <circle cx="64" cy="64" r="56" fill="none" stroke="#FFFFFF" stroke-width="1" opacity="0.5"/>
+  
+  <!-- 内圈渐变 -->
+  <circle cx="64" cy="64" r="52" fill="url(#innerGradient)"/>
+  
+  <!-- 字母A主体 -->
+  <path d="M48 92V85L58 72H70L80 85V92H74V84H54V92H48Z" fill="#FFFFFF"/>
+  <path d="M56 44L64 52L72 44H78L68 64H60L50 44H56Z" fill="#FFFFFF"/>
+  <rect x="59.2" y="58.4" width="9.6" height="4.8" fill="#FFFFFF"/>
+  
+  <!-- Amazon特色箭头 -->
+  <path d="M40 104C40 104 56 96 88 96C88 96 88 100 80 104" stroke="#FFFFFF" stroke-width="4.8" stroke-linecap="round"/>
+  <path d="M80 99L88 104L80 109" stroke="#FFFFFF" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  
+  <!-- 装饰元素 -->
+  <circle cx="88" cy="40" r="6" fill="#FFFFFF" opacity="0.9"/>
+  <circle cx="40" cy="40" r="4" fill="#FFFFFF" opacity="0.6"/>
+  <circle cx="96" cy="88" r="3" fill="#FFFFFF" opacity="0.4"/>
+  <circle cx="32" cy="88" r="2.5" fill="#FFFFFF" opacity="0.3"/>
+  
+  <!-- 顶部弧形文字装饰 -->
+  <path d="M32 32C32 32 48 24 64 24C80 24 96 32 96 32" stroke="#FFFFFF" stroke-width="3.2" stroke-linecap="round" opacity="0.7"/>
+  <path d="M36 28C36 28 50 22 64 22C78 22 92 28 92 28" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round" opacity="0.4"/>
+  
+  <!-- 底部装饰线 -->
+  <path d="M32 96C32 96 40 93 48 93" stroke="#FFFFFF" stroke-width="2.1" stroke-linecap="round" opacity="0.5"/>
+  <path d="M96 96C96 96 88 93 80 93" stroke="#FFFFFF" stroke-width="1.4" stroke-linecap="round" opacity="0.3"/>
+  
+  <!-- 中心高光效果 -->
+  <circle cx="52" cy="52" r="2.5" fill="#FFFFFF" opacity="0.3"/>
+  <circle cx="76" cy="52" r="1.8" fill="#FFFFFF" opacity="0.2"/>
+  
+  <!-- 边缘装饰点 -->
+  <circle cx="20" cy="64" r="1.5" fill="#FFFFFF" opacity="0.4"/>
+  <circle cx="108" cy="64" r="1.5" fill="#FFFFFF" opacity="0.4"/>
+  <circle cx="64" cy="20" r="1.2" fill="#FFFFFF" opacity="0.3"/>
+  <circle cx="64" cy="108" r="1.2" fill="#FFFFFF" opacity="0.3"/>
+  
+  <!-- 内部阴影效果 -->
+  <circle cx="64" cy="64" r="48" fill="none" stroke="#000000" stroke-width="0.8" opacity="0.1"/>
+  
+  <!-- 渐变定义 -->
+  <defs>
+    <radialGradient id="innerGradient" cx="0.3" cy="0.3" r="0.8">
+      <stop offset="0%" stop-color="#E67E22"/>
+      <stop offset="70%" stop-color="#D35400"/>
+      <stop offset="100%" stop-color="#A04000"/>
+    </radialGradient>
+  </defs>
+</svg>

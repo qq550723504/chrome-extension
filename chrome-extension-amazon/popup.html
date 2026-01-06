@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Amazon选品工具</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      width: 400px;
+      padding: 20px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #333;
+    }
+    
+    .container {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    }
+    
+    h1 {
+      font-size: 20px;
+      margin-bottom: 20px;
+      color: #667eea;
+      text-align: center;
+    }
+    
+    .input-group {
+      margin-bottom: 15px;
+    }
+    
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-size: 14px;
+      font-weight: 500;
+      color: #555;
+    }
+    
+    input[type="number"] {
+      width: 100%;
+      padding: 10px;
+      border: 2px solid #e0e0e0;
+      border-radius: 6px;
+      font-size: 14px;
+      transition: border-color 0.3s;
+    }
+    
+    input[type="number"]:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+    
+    .button-group {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+    }
+    
+    button {
+      flex: 1;
+      padding: 12px;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    
+    #startBtn {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+    
+    #startBtn:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+    }
+    
+    #startBtn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+    
+    #exportBtn {
+      background: #10b981;
+      color: white;
+    }
+    
+    #exportBtn:hover:not(:disabled) {
+      background: #059669;
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(16, 185, 129, 0.4);
+    }
+    
+    #exportBtn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+    
+    #refreshBtn {
+      background: #3b82f6;
+      color: white;
+    }
+    
+    #refreshBtn:hover {
+      background: #2563eb;
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(59, 130, 246, 0.4);
+    }
+    
+    #clearBtn {
+      background: #ef4444;
+      color: white;
+    }
+    
+    #clearBtn:hover {
+      background: #dc2626;
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(239, 68, 68, 0.4);
+    }
+    
+    .debug-info {
+      margin-top: 10px;
+      padding: 10px;
+      background: #f9fafb;
+      border-radius: 6px;
+      text-align: center;
+    }
+    
+    .status {
+      margin-top: 15px;
+      padding: 12px;
+      border-radius: 6px;
+      font-size: 13px;
+      text-align: center;
+      display: none;
+    }
+    
+    .status.info {
+      background: #dbeafe;
+      color: #1e40af;
+      border: 1px solid #93c5fd;
+    }
+    
+    .status.success {
+      background: #d1fae5;
+      color: #065f46;
+      border: 1px solid #6ee7b7;
+    }
+    
+    .status.error {
+      background: #fee2e2;
+      color: #991b1b;
+      border: 1px solid #fca5a5;
+    }
+    
+    .results {
+      margin-top: 15px;
+      padding: 15px;
+      background: #f9fafb;
+      border-radius: 6px;
+      border: 1px solid #e5e7eb;
+    }
+    
+    .results h3 {
+      font-size: 14px;
+      margin-bottom: 10px;
+      color: #374151;
+    }
+    
+    .asin-list {
+      max-height: 200px;
+      overflow-y: auto;
+      font-size: 12px;
+      line-height: 1.8;
+      color: #6b7280;
+    }
+    
+    .asin-item {
+      padding: 5px;
+      background: white;
+      margin-bottom: 5px;
+      border-radius: 4px;
+      border: 1px solid #e5e7eb;
+    }
+    
+    .progress {
+      margin-top: 15px;
+      display: none;
+    }
+    
+    .progress-bar {
+      width: 100%;
+      height: 8px;
+      background: #e5e7eb;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+      width: 0%;
+      transition: width 0.3s;
+    }
+    
+    .progress-text {
+      margin-top: 8px;
+      font-size: 12px;
+      text-align: center;
+      color: #6b7280;
+    }
+    
+    .footer {
+      margin-top: 20px;
+      padding-top: 15px;
+      border-top: 1px solid #e5e7eb;
+      text-align: center;
+      font-size: 11px;
+      color: #9ca3af;
+    }
+    
+    .version {
+      font-weight: 600;
+      color: #667eea;
+      margin-bottom: 5px;
+    }
+    
+  .copyright {
+      font-size: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🛒 Amazon选品工具</h1>
+    
+    <div class="input-group">
+      <label for="startPage">起始页数：</label>
+      <input type="number" id="startPage" min="1" max="100" value="1" placeholder="从第几页开始">
+    </div>
+    
+    <div class="input-group">
+      <label for="pageCount">收集页数：</label>
+      <input type="number" id="pageCount" min="1" max="20" value="5" placeholder="输入要收集的页数">
+    </div>
+    
+    <div class="button-group">
+      <button id="startBtn">开始收集</button>
+      <button id="exportBtn" disabled>导出新增</button>
+    </div>
+    
+    <div class="button-group">
+      <button id="exportAllBtn" disabled style="background: #8b5cf6;">导出全部</button>
+      <button id="refreshBtn" style="background: #3b82f6;">刷新数据</button>
+    </div>
+    
+    <div class="button-group">
+      <button id="clearBtn">清空数据</button>
+      <button id="resetExportBtn" style="background: #f59e0b; font-size: 12px;">重置导出状态</button>
+    </div>
+    
+    <div class="progress" id="progress">
+      <div class="progress-bar">
+        <div class="progress-fill" id="progressFill"></div>
+      </div>
+      <div class="progress-text" id="progressText">准备中...</div>
+    </div>
+    
+    <div class="status" id="status"></div>
+    
+    <div class="results" id="results" style="display: none;">
+      <h3>已收集 ASIN (<span id="asinCount">0</span>)：</h3>
+      <div class="asin-list" id="asinList"></div>
+    </div>
+    
+    <div class="debug-info" id="debugInfo" style="display: none;">
+      <small style="color: #9ca3af; font-size: 11px;">
+        存储状态: <span id="storageStatus">检查中...</span>
+      </small>
+    </div>
+    
+    <div class="footer">
+      <div class="version">v1.0.0</div>
+      <div class="copyright">© 2025 硕米科技</div>
+    </div>
+  </div>
+  
+  <script src="popup.js"></script>
+</body>
+</html>
