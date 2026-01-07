@@ -1,13 +1,19 @@
 {
   "manifest_version": 3,
-  "name": "1688选品工具",
+  "name": "1688商品ID收集工具",
   "version": "1.0.0",
-  "description": "自动收集1688商品信息，帮助选品分析",
+  "description": "自动收集1688商品ID，支持店铺页面分页收集",
   "author": "Henry",
   "permissions": ["activeTab", "storage", "scripting"],
   "host_permissions": [
     "https://*.1688.com/*",
     "https://www.1688.com/*"
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["page-script.js"],
+      "matches": ["https://*.1688.com/*"]
+    }
   ],
   "action": {
     "default_popup": "popup.html",
@@ -25,7 +31,6 @@
         "https://www.1688.com/*"
       ],
       "js": ["content.js"],
-      "css": ["content.css"],
       "run_at": "document_start"
     }
   ],

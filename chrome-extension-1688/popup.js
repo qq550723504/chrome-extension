@@ -12,6 +12,9 @@ class PopupManager {
     // 加载统计数据
     async loadStats() {
         try {
+            // 检测当前页面类型
+            await this.detectCurrentPageType();
+            
             const result = await chrome.storage.local.get(['productData']);
             const productData = result.productData || {
                 ids: [],
@@ -33,6 +36,49 @@ class PopupManager {
             document.getElementById('avgPrice').textContent = `${unExportedCount} 未导出`;
         } catch (error) {
             console.error('加载统计数据失败:', error);
+        }
+    }
+
+    // 检测当前页面类型
+    async detectCurrentPageType() {
+        try {
+            const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+            
+            if (!tab.url.includes('1688.com')) {
+                this.updatePageTypeDisplay('非1688页面');
+                return;
+            }
+
+            // 尝试获取页面类型信息
+            try {
+                const response = await chrome.tabs.sendMessage(tab.id, { action: 'ping' });
+                if (response && response.success) {
+                    const pageType = response.pageType === 'shop' ? '店铺页面' : '搜索结果页';
+                    this.updatePageTypeDisplay(pageType);
+                } else {
+                    this.updatePageTypeDisplay('1688页面（未检测）');
+                }
+            } catch (error) {
+                this.updatePageTypeDisplay('1688页面（需刷新）');
+            }
+        } catch (error) {
+            this.updatePageTypeDisplay('页面检测失败');
+        }
+    }
+
+    // 更新页面类型显示
+    updatePageTypeDisplay(pageType) {
+        const pageTypeElement = document.getElementById('pageType');
+        if (pageTypeElement) {
+            pageTypeElement.textContent = pageType;
+            
+            // 根据页面类型设置不同的样式
+            pageTypeElement.className = 'page-type';
+            if (pageType.includes('店铺')) {
+                pageTypeElement.classList.add('shop-page');
+            } else if (pageType.includes('搜索')) {
+                pageTypeElement.classList.add('search-page');
+            }
         }
     }
 
@@ -60,8 +106,6 @@ class PopupManager {
             collectBtn.disabled = true;
             progressDiv.classList.add('show');
             
-            this.showStatus(`开始收集 ${pageCount} 页商品ID...`, 'info');
-
             // 获取当前活动标签页
             const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
             
@@ -96,55 +140,115 @@ class PopupManager {
                 return;
             }
 
-            // 开始多页收集
-            let totalCollected = 0;
-            for (let currentPage = 1; currentPage <= pageCount; currentPage++) {
-                progressDiv.textContent = `正在收集第 ${currentPage}/${pageCount} 页...`;
-                
-                // 发送收集命令
-                const collectResponse = await chrome.tabs.sendMessage(tab.id, { 
-                    action: 'collectProductIds',
-                    pageNumber: currentPage,
-                    isMultiPage: pageCount > 1
-                });
-                
-                if (collectResponse.success) {
-                    totalCollected += collectResponse.count;
-                    progressDiv.textContent = `第 ${currentPage}/${pageCount} 页完成，收集了 ${collectResponse.count} 个商品ID`;
-                    
-                    // 如果不是最后一页，需要翻页
-                    if (currentPage < pageCount) {
-                        progressDiv.textContent = `第 ${currentPage}/${pageCount} 页完成，正在翻页...`;
-                        
-                        const nextPageResponse = await chrome.tabs.sendMessage(tab.id, { 
-                            action: 'goToNextPage' 
-                        });
-                        
-                        if (!nextPageResponse.success) {
-                            this.showStatus(`翻页失败：${nextPageResponse.message}`, 'error');
-                            break;
-                        }
-                        
-                        // 等待页面加载
-                        await new Promise(resolve => setTimeout(resolve, 3000));
-                    }
-                } else {
-                    this.showStatus(`第 ${currentPage} 页收集失败：${collectResponse.message}`, 'error');
-                    break;
-                }
-            }
-            
-            if (totalCollected > 0) {
-                this.showStatus(`收集完成！共收集了 ${totalCollected} 个商品ID`, 'success');
-                await this.loadStats();
+            // 更新页面类型显示
+            const pageType = response.pageType === 'shop' ? '店铺页面' : '搜索结果页';
+            this.updatePageTypeDisplay(pageType);
+
+            // 根据页面类型选择收集策略
+            if (response.pageType === 'shop') {
+                // 店铺页面：使用API拦截方式
+                await this.collectFromShopPage(tab.id, progressDiv);
+            } else {
+                // 搜索结果页：使用DOM方式收集单页
+                await this.collectFromSearchPage(tab.id, progressDiv);
             }
             
         } catch (error) {
             this.showStatus('收集失败，请刷新页面重试', 'error');
+            console.error('收集过程出错:', error);
         } finally {
             collectBtn.textContent = '收集商品ID';
             collectBtn.disabled = false;
             progressDiv.classList.remove('show');
+        }
+    }
+
+    // 从店铺页面收集商品ID
+    async collectFromShopPage(tabId, progressDiv) {
+        const pageCountInput = document.getElementById('pageCount');
+        const pageCount = parseInt(pageCountInput.value) || 1;
+        
+        if (pageCount === 1) {
+            // 收集单页
+            this.showStatus('开始从店铺页面收集商品ID...', 'info');
+            progressDiv.textContent = '正在从店铺页面收集商品ID...';
+            
+            console.log('🚀 [Popup] 发送收集消息到content script, tabId:', tabId);
+            
+            try {
+                // 发送收集命令
+                const collectResponse = await chrome.tabs.sendMessage(tabId, { 
+                    action: 'collectProductIds',
+                    pageType: 'shop'
+                });
+                
+                console.log('📨 [Popup] 收到content script响应:', collectResponse);
+                
+                if (collectResponse && collectResponse.success) {
+                    this.showStatus(`店铺页面收集完成！共收集了 ${collectResponse.count} 个商品ID`, 'success');
+                    await this.loadStats();
+                } else {
+                    const errorMsg = collectResponse ? collectResponse.message : '未收到响应';
+                    this.showStatus(`店铺页面收集失败：${errorMsg}`, 'error');
+                }
+            } catch (error) {
+                console.error('❌ [Popup] 发送消息失败:', error);
+                this.showStatus(`通信失败：${error.message}`, 'error');
+            }
+        } else {
+            // 收集多页
+            this.showStatus(`开始收集所有${pageCount}页商品ID...`, 'info');
+            progressDiv.textContent = `正在收集所有${pageCount}页商品ID...`;
+            
+            console.log('🚀 [Popup] 发送收集所有页面消息, pageCount:', pageCount);
+            
+            try {
+                // 发送收集所有页面命令
+                const collectResponse = await chrome.tabs.sendMessage(tabId, { 
+                    action: 'collectProductIds',
+                    pageType: 'shop',
+                    collectAllPages: true,
+                    totalPages: pageCount
+                });
+                
+                console.log('📨 [Popup] 收到所有页面收集响应:', collectResponse);
+                
+                if (collectResponse && collectResponse.success) {
+                    this.showStatus(`所有页面收集完成！共收集了 ${collectResponse.count} 个商品ID`, 'success');
+                    await this.loadStats();
+                } else {
+                    const errorMsg = collectResponse ? collectResponse.message : '未收到响应';
+                    this.showStatus(`所有页面收集失败：${errorMsg}`, 'error');
+                }
+            } catch (error) {
+                console.error('❌ [Popup] 发送消息失败:', error);
+                this.showStatus(`通信失败：${error.message}`, 'error');
+            }
+        }
+    }
+
+    // 从搜索结果页收集商品ID（单页）
+    async collectFromSearchPage(tabId, progressDiv) {
+        this.showStatus('开始从搜索结果页收集商品ID...', 'info');
+        progressDiv.textContent = '正在从搜索结果页收集商品ID...';
+        
+        try {
+            // 发送收集命令
+            const collectResponse = await chrome.tabs.sendMessage(tabId, { 
+                action: 'collectProductIds',
+                pageType: 'search'
+            });
+            
+            if (collectResponse && collectResponse.success) {
+                this.showStatus(`搜索页面收集完成！共收集了 ${collectResponse.count} 个商品ID`, 'success');
+                await this.loadStats();
+            } else {
+                const errorMsg = collectResponse ? collectResponse.message : '未收到响应';
+                this.showStatus(`搜索页面收集失败：${errorMsg}`, 'error');
+            }
+        } catch (error) {
+            console.error('❌ [Popup] 搜索页面收集失败:', error);
+            this.showStatus(`通信失败：${error.message}`, 'error');
         }
     }
 
