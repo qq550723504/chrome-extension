@@ -16,23 +16,14 @@ class PopupManager {
             await this.detectCurrentPageType();
             
             const result = await chrome.storage.local.get(['productData']);
-            const productData = result.productData || {
-                ids: [],
-                exportedIds: [],
-                stats: {
-                    totalIds: 0,
-                    exportedCount: 0,
-                    lastCollectCount: 0
-                }
-            };
+            const productData = result.productData || { ids: [], exportedIds: [] };
 
             const totalIds = productData.ids.length;
             const exportedCount = productData.exportedIds.length;
             const unExportedCount = totalIds - exportedCount;
-            const lastCollectCount = productData.stats.lastCollectCount || 0;
 
             document.getElementById('totalProducts').textContent = totalIds;
-            document.getElementById('currentPage').textContent = lastCollectCount;
+            document.getElementById('currentPage').textContent = exportedCount;
             document.getElementById('avgPrice').textContent = `${unExportedCount} 未导出`;
         } catch (error) {
             console.error('加载统计数据失败:', error);
@@ -149,8 +140,8 @@ class PopupManager {
                 // 店铺页面：使用API拦截方式
                 await this.collectFromShopPage(tab.id, progressDiv);
             } else {
-                // 搜索结果页：使用DOM方式收集单页
-                await this.collectFromSearchPage(tab.id, progressDiv);
+                // 搜索结果页：支持多页收集
+                await this.collectFromSearchPages(tab.id, pageCount, progressDiv);
             }
             
         } catch (error) {
@@ -227,10 +218,44 @@ class PopupManager {
         }
     }
 
+    // 从搜索结果页收集商品ID（多页支持）
+    async collectFromSearchPages(tabId, pageCount, progressDiv) {
+        if (pageCount === 1) {
+            // 单页收集
+            return await this.collectFromSearchPage(tabId, progressDiv);
+        }
+        
+        // 多页收集 - 让content script自己处理
+        this.showStatus(`开始收集搜索页面 ${pageCount} 页商品ID...`, 'info');
+        console.log(`🚀 [Popup] 开始多页收集，目标页数: ${pageCount}`);
+        
+        try {
+            // 发送多页收集命令给content script，让它自己处理翻页和收集
+            const collectResponse = await chrome.tabs.sendMessage(tabId, { 
+                action: 'collectMultipleSearchPages',
+                pageCount: pageCount,
+                pageType: 'search'
+            });
+            
+            console.log(`📊 [Popup] 多页收集响应:`, collectResponse);
+            
+            if (collectResponse && collectResponse.success) {
+                this.showStatus(`搜索页面收集完成！共收集了 ${collectResponse.count} 个商品ID（${pageCount}页）`, 'success');
+                await this.loadStats();
+            } else {
+                const errorMsg = collectResponse ? collectResponse.message : '未收到响应';
+                this.showStatus(`多页收集失败：${errorMsg}`, 'error');
+            }
+        } catch (error) {
+            console.error('❌ [Popup] 多页收集异常:', error);
+            this.showStatus(`多页收集异常：${error.message}`, 'error');
+        }
+    }
+
     // 从搜索结果页收集商品ID（单页）
     async collectFromSearchPage(tabId, progressDiv) {
         this.showStatus('开始从搜索结果页收集商品ID...', 'info');
-        progressDiv.textContent = '正在从搜索结果页收集商品ID...';
+        progressDiv.textContent = '正在滚动加载所有商品并收集ID...';
         
         try {
             // 发送收集命令
@@ -256,11 +281,7 @@ class PopupManager {
     async exportData() {
         try {
             const result = await chrome.storage.local.get(['productData']);
-            const productData = result.productData || {
-                ids: [],
-                exportedIds: [],
-                stats: {}
-            };
+            const productData = result.productData || { ids: [], exportedIds: [] };
             
             // 只导出未导出的ID
             const unExportedIds = productData.ids.filter(id => !productData.exportedIds.includes(id));
@@ -290,18 +311,12 @@ class PopupManager {
             // 标记这些ID为已导出
             const updatedExportedIds = [...productData.exportedIds, ...unExportedIds];
             const updatedData = {
-                ...productData,
-                exportedIds: updatedExportedIds,
-                stats: {
-                    ...productData.stats,
-                    exportedCount: updatedExportedIds.length,
-                    lastExportTime: new Date().toISOString(),
-                    lastExportCount: unExportedIds.length
-                }
+                ids: productData.ids,
+                exportedIds: updatedExportedIds
             };
             
             await chrome.storage.local.set({ productData: updatedData });
-            await this.loadStats();
+            await this.loadStats(); // 重新加载统计数据
             
             this.showStatus(`成功导出 ${unExportedIds.length} 个新商品ID`, 'success');
             
@@ -311,18 +326,13 @@ class PopupManager {
         }
     }
 
-    // 转换商品ID为CSV格式
+    // 转换商品ID为CSV格式 - 简化版本
     convertIdsToCSV(productIds) {
-        const headers = ['商品ID', '商品链接', '收集时间'];
+        const headers = ['商品ID'];
         const csvRows = [headers.join(',')];
         
         productIds.forEach(productId => {
-            const row = [
-                `"${productId}"`,
-                `"https://detail.1688.com/offer/${productId}.html"`,
-                `"${new Date().toISOString()}"`
-            ];
-            csvRows.push(row.join(','));
+            csvRows.push(`"${productId}"`);
         });
         
         return csvRows.join('\n');
@@ -330,7 +340,7 @@ class PopupManager {
 
     // 清空数据
     async clearData() {
-        if (confirm('确定要清空所有收集的商品ID吗？此操作不可恢复。')) {
+        if (confirm('⚠️ 警告：确定要清空所有收集的商品ID吗？\n\n此操作将删除：\n• 所有已收集的商品ID\n• 所有导出记录\n\n此操作不可恢复！')) {
             try {
                 await chrome.storage.local.clear();
                 await this.loadStats();

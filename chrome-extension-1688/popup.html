@@ -91,7 +91,30 @@
         .btn-secondary:hover {
             background: #e0e0e0;
         }
-        .status {
+        .btn-danger {
+            background: transparent;
+            color: #999;
+            border: 1px solid #ddd;
+            font-size: 12px;
+            padding: 8px 12px;
+        }
+        .btn-danger:hover {
+            background: #ffeaea;
+            color: #d63031;
+            border-color: #d63031;
+        }
+        .btn-danger {
+            background: transparent;
+            color: #999;
+            border: 1px solid #ddd;
+            font-size: 12px;
+            padding: 8px 12px;
+        }
+        .btn-danger:hover {
+            background: #ffeaea;
+            color: #d63031;
+            border-color: #d63031;
+        }
             margin-top: 15px;
             padding: 10px;
             border-radius: 6px;
@@ -186,7 +209,9 @@
     <div class="actions">
         <button class="btn btn-primary" id="collectBtn">收集商品ID</button>
         <button class="btn btn-secondary" id="exportBtn">导出数据</button>
-        <button class="btn btn-secondary" id="clearBtn">清空数据</button>
+        <div style="text-align: center; margin-top: 15px;">
+            <button class="btn btn-danger" id="clearBtn">清空数据</button>
+        </div>
     </div>
 
     <div class="progress" id="progressDiv"></div>
